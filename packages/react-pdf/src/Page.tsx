@@ -387,7 +387,8 @@ export default function Page(props: PageProps) {
     return scaleWithDefault * pageScale;
   }, [height, page, rotate, scaleProps, width]);
 
-  function hook() {
+  // biome-ignore lint/correctness/useExhaustiveDependencies: useEffect intentionally triggered on pdf change
+  useEffect(() => {
     return () => {
       if (!isProvided(pageIndex)) {
         // Impossible, but TypeScript doesn't know that
@@ -398,9 +399,7 @@ export default function Page(props: PageProps) {
         unregisterPage(pageIndex);
       }
     };
-  }
-
-  useEffect(hook, [_enableRegisterUnregisterPage, pdf, pageIndex, unregisterPage]);
+  }, [_enableRegisterUnregisterPage, pdf, pageIndex, unregisterPage]);
 
   /**
    * Called when a page is loaded successfully
@@ -445,9 +444,10 @@ export default function Page(props: PageProps) {
     pageDispatch({ type: 'RESET' });
   }
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies: useEffect intentionally triggered on pdf change
   useEffect(resetPage, [pageDispatch, pdf, pageIndex]);
 
-  function loadPage() {
+  useEffect(() => {
     if (!pdf || !pageNumber) {
       return;
     }
@@ -464,27 +464,21 @@ export default function Page(props: PageProps) {
       });
 
     return () => cancelRunningTask(runningTask);
-  }
+  }, [pageDispatch, pdf, pageNumber]);
 
-  useEffect(loadPage, [pageDispatch, pdf, pageIndex, pageNumber, registerPage]);
+  // biome-ignore lint/correctness/useExhaustiveDependencies: Ommitted callbacks so they are not called every time they change
+  useEffect(() => {
+    if (page === undefined) {
+      return;
+    }
 
-  useEffect(
-    () => {
-      if (page === undefined) {
-        return;
-      }
+    if (page === false) {
+      onLoadError();
+      return;
+    }
 
-      if (page === false) {
-        onLoadError();
-        return;
-      }
-
-      onLoadSuccess();
-    },
-    // Ommitted callbacks so they are not called every time they change
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [page, scale],
-  );
+    onLoadSuccess();
+  }, [page, scale]);
 
   const childContext = useMemo(
     () =>
@@ -548,6 +542,7 @@ export default function Page(props: PageProps) {
       makeEventProps(otherProps, () =>
         page ? (scale ? makePageCallback(page, scale) : undefined) : page,
       ),
+    // biome-ignore lint/correctness/useExhaustiveDependencies: FIXME
     [otherProps, page, scale],
   );
 

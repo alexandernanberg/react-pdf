@@ -54,9 +54,10 @@ export default function StructTree() {
     structTreeDispatch({ type: 'RESET' });
   }
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies: useEffect intentionally triggered on page change
   useEffect(resetAnnotations, [structTreeDispatch, page]);
 
-  function loadStructTree() {
+  useEffect(() => {
     if (customTextRenderer) {
       // TODO: Document why this is necessary
       return;
@@ -78,27 +79,21 @@ export default function StructTree() {
       });
 
     return () => cancelRunningTask(runningTask);
-  }
+  }, [customTextRenderer, page, structTreeDispatch]);
 
-  useEffect(loadStructTree, [customTextRenderer, page, structTreeDispatch]);
+  // biome-ignore lint/correctness/useExhaustiveDependencies: Ommitted callbacks so they are not called every time they change
+  useEffect(() => {
+    if (structTree === undefined) {
+      return;
+    }
 
-  useEffect(
-    () => {
-      if (structTree === undefined) {
-        return;
-      }
+    if (structTree === false) {
+      onLoadError();
+      return;
+    }
 
-      if (structTree === false) {
-        onLoadError();
-        return;
-      }
-
-      onLoadSuccess();
-    },
-    // Ommitted callbacks so they are not called every time they change
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [structTree],
-  );
+    onLoadSuccess();
+  }, [structTree]);
 
   if (!structTree) {
     return null;

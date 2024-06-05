@@ -82,9 +82,10 @@ export default function AnnotationLayer() {
     annotationsDispatch({ type: 'RESET' });
   }
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies: useEffect intentionally triggered on page change
   useEffect(resetAnnotations, [annotationsDispatch, page]);
 
-  function loadAnnotations() {
+  useEffect(() => {
     if (!page) {
       return;
     }
@@ -103,27 +104,21 @@ export default function AnnotationLayer() {
     return () => {
       cancelRunningTask(runningTask);
     };
-  }
+  }, [annotationsDispatch, page]);
 
-  useEffect(loadAnnotations, [annotationsDispatch, page, renderForms]);
+  // biome-ignore lint/correctness/useExhaustiveDependencies: Ommitted callbacks so they are not called every time they change
+  useEffect(() => {
+    if (annotations === undefined) {
+      return;
+    }
 
-  useEffect(
-    () => {
-      if (annotations === undefined) {
-        return;
-      }
+    if (annotations === false) {
+      onLoadError();
+      return;
+    }
 
-      if (annotations === false) {
-        onLoadError();
-        return;
-      }
-
-      onLoadSuccess();
-    },
-    // Ommitted callbacks so they are not called every time they change
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [annotations],
-  );
+    onLoadSuccess();
+  }, [annotations]);
 
   function onRenderSuccess() {
     if (onRenderAnnotationLayerSuccessProps) {
@@ -144,7 +139,8 @@ export default function AnnotationLayer() {
     [page, rotate, scale],
   );
 
-  function renderAnnotationLayer() {
+  // biome-ignore lint/correctness/useExhaustiveDependencies: Ommitted callbacks so they are not called every time they change
+  useEffect(() => {
     if (!pdf || !page || !linkService || !annotations) {
       return;
     }
@@ -192,14 +188,7 @@ export default function AnnotationLayer() {
     return () => {
       // TODO: Cancel running task?
     };
-  }
-
-  useEffect(
-    renderAnnotationLayer,
-    // Ommitted callbacks so they are not called every time they change
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [annotations, imageResourcesPath, linkService, page, renderForms, viewport],
-  );
+  }, [annotations, imageResourcesPath, linkService, page, renderForms, viewport]);
 
   return (
     <div className={clsx('react-pdf__Page__annotations', 'annotationLayer')} ref={layerElement} />

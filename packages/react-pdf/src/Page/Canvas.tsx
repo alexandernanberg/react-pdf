@@ -87,7 +87,8 @@ export default function Canvas(props: CanvasProps) {
     [page, rotate, scale],
   );
 
-  function drawPageOnCanvas() {
+  // biome-ignore lint/correctness/useExhaustiveDependencies: Ommitted callbacks so they are not called every time they change
+  useEffect(() => {
     if (!page) {
       return;
     }
@@ -129,16 +130,9 @@ export default function Canvas(props: CanvasProps) {
       .catch(onRenderError);
 
     return () => cancelRunningTask(runningTask);
-  }
+  }, [canvasBackground, page, renderForms, renderViewport, viewport]);
 
-  useEffect(
-    drawPageOnCanvas,
-    // Ommitted callbacks so they are not called every time they change
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [canvasBackground, page, renderForms, renderViewport, viewport],
-  );
-
-  const cleanup = useCallback(() => {
+  useEffect(() => {
     const { current: canvas } = canvasElement;
 
     /**
@@ -149,9 +143,7 @@ export default function Canvas(props: CanvasProps) {
       canvas.width = 0;
       canvas.height = 0;
     }
-  }, [canvasElement]);
-
-  useEffect(() => cleanup, [cleanup]);
+  }, []);
 
   return (
     <canvas
